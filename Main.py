@@ -1,40 +1,5 @@
 # -*- coding: utf-8 -*-
 
-def int_to_list(number: int) -> list:
-    print("Inputted as an 'int'")
-    array = []
-    n_skip = 0  # don't read the first element if negative
-    if number < 0:
-        array.append("-")
-        n_skip = 1
-    for c in str(number)[n_skip:]:
-        array.append(int(c))
-
-    return array
-
-
-def float_to_list(number: float) -> list:
-    print("Inputted as a 'float'")
-    array = []
-    n_skip = 0  # don't read the first element if negative
-    if number < 0:
-        array.append("-")
-        n_skip = 1
-
-    dot = str(number).index(".")
-    for c in str(number)[n_skip:dot]:
-        array.append(int(c))
-    array.append(".")
-    for c in str(number)[dot+1:]:
-        array.append(int(c))
-    return array
-
-
-def str_to_list(number: str) -> list:
-    print("Inputted as a 'str'")
-    return
-
-
 class Glide:
     """
     Arithmetic on arbitrarily accurate denary floats. These are implemented as 
@@ -54,70 +19,47 @@ class Glide:
         Prints the person's name and age.
     """
 
-    def __init__(self, number):
+    def __init__(self, number: float):
+        self._units = []
+        self._decs = []
+        try:
+            if number >= 0:
+                self._sign = "+ve"
+            else:
+                self._sign = "-ve"
 
-        if type(number) == int:
-            self._array = int_to_list(number)
+            skip_on_negative = {"+ve": 0, "-ve": 1}
 
-        elif type(number) == float:
-            self._array = float_to_list(number)
+            num_str = str(float(number))
+            dot = num_str.index(".")
 
-        elif type(number) == str:
-            self._array = str_to_list(number)
+            for c in num_str[skip_on_negative[self._sign]:dot]:
+                self._units.append(int(c))
 
-        else:
-            raise TypeError("Can't make sense of the input")
-        # elif 
-        #     for c in str(number):
-        #         if c == "-":
-        #             self._array.append(c)
-        #         else:
-        #             self._array.append(int(c))
+            for d in num_str[dot+1:]:
+                self._decs.append(int(d))
 
-        # good_chars = [str(c) for c in range(0, 10)] + ["-", ".", "/"]
-        # elif type(number) == float:
-        #     for c in str(number):
-        #         if c == "." or "-":
-        #             self._array.append(c)
-        #         else:
-        #             self._array.append(int(c))
-
-        # elif type(number) == str:
-
-        #     for c in number:
-        #         if c not in good_chars:
-        #             i = number.index(c)
-        #             err = f"Bad character in number: '{c}' at pos: {i},"  
-        #             err += " can't convert to glide."
-        #             raise bad_input(err)
-
-        #     if "/" in number:
-        #         self._array = "Fraction type, still in progress..."
-
-        #     else:
-        #         for c in str(number):
-        #             self._array.append(int(c))
-
-        # elif isinstance(number, list):
-        #     for c in number:
-        #         if c not in good_chars:
-        #             print(good_chars)
-        #             i = good_chars.index(str(c))
-        #             err = f"Bad character in number ({c} at pos {i}), \
-        #             can't convert to glide."
-        #             raise err
-        #     self._array = number
-
-        # else:
-        #     raise "Input must be a valid number or glide-friendly array"
+        except TypeError:
+            print("Can't make sense of the input")
+            raise
 
     def __repr__(self):
         return f"glide({self})"
 
     def __str__(self):
         s = ""
-        for c in self._array:
+
+        if self._sign == "-ve":
+            s += "-"
+
+        for c in self._units:
             s += str(c)
+
+        s += "."
+
+        for d in self._decs:
+            s += str(d)
+
         return s
 
 # def gadd(a: glide, b: glide) -> glide:
