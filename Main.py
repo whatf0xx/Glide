@@ -3,20 +3,19 @@
 class Glide:
     """
     Arithmetic on arbitrarily accurate denary floats. These are implemented as 
-    lists of ints 0-9. Arithmetic is defined as operations over the arrays,
-    but the glides should always be neatly represented as number strings.
+    lists of ints 0-9, sign stored as a string. Arithmetic is defined as operations over the
+    arrays, but the glides are neatly represented as number strings.
     
     ...
 
     Attributes
     ----------
-    number : str, int, float or glide-friendly array
-        Representation of the number for the glide
+    number: float. The number to be converted into a Glide.
 
     Methods
     -------
-    info(additional=""):
-        Prints the person's name and age.
+    __repr__():
+        Gets the representation of the Glide.
     """
 
     def __init__(self, number: float):
@@ -61,8 +60,3 @@ class Glide:
             s += str(d)
 
         return s
-
-# def gadd(a: glide, b: glide) -> glide:
-#     carry = 0
-#     c = []
-#     for ai, bi in zip(reversed(a), reversed(b)):
