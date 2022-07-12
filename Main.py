@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import copy
+
 
 class Glide:
     """
@@ -60,3 +62,39 @@ class Glide:
             s += str(d)
 
         return s
+
+    def get_units(self):
+        return self._units
+
+    def set_units(self, new_units):
+        self._units = []
+        for c in str(new_units):
+            self._units.append(c)
+
+        return self
+
+    def get_decs(self):
+        return self._decs
+
+    def set_decs(self, new_decs):
+        self._decs = []
+        for c in str(new_decs):
+            self._decs.append(c)
+
+        return self
+
+    def get_sign(self):
+        return self._sign
+
+    def set_sign(self, new_sign):
+        allowed_signs = ["+ve", "-ve"]
+        if new_sign not in allowed_signs:
+            raise ValueError("That's not an allowed sign! Use '+ve' or '-ve'")
+        else:
+            self._sign = new_sign
+
+        return self
+
+    def absolute(self):
+        other = copy.copy(self)
+        return other.set_sign("+ve")
