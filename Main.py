@@ -37,7 +37,7 @@ class Glide:
             for c in num_str[skip_on_negative[self._sign]:dot]:
                 self._units.append(int(c))
 
-            for d in num_str[dot+1:]:
+            for d in num_str[dot + 1:]:
                 self._decs.append(int(d))
 
         except TypeError:
@@ -45,7 +45,7 @@ class Glide:
             raise
 
     def __repr__(self):
-        return f"glide({self})"
+        return f"Glide({self})"
 
     def __str__(self):
         s = ""
@@ -94,6 +94,60 @@ class Glide:
     def absolute(self):
         a = copy.copy(self)
         return a.set_sign("+ve")
+
+    def to_float(self):
+        f = 0
+        for e, i in enumerate(self.get_decs()):
+            f += 0.1 ** (e + 1) * i
+
+        for u, j in enumerate(reversed(self.get_units())):
+            f += 10 ** u * j
+
+        s = {"+ve": 1, "-ve": -1}
+        f *= s[self.get_sign()]
+
+        return f
+
+    def trim(self):
+        """
+        Get rid of leading/trailing zeros.
+
+        Returns
+        -------
+        self: the updated Glide.
+        """
+        leading_zero = False
+        self.set_units([a for a in self.get_units() if (leading_zero or a != 0) and (leading_zero := True)])
+
+        decs = copy.copy(self.get_decs())
+        decs.reverse()
+        leading_zero = False
+        new_decs = [a for a in decs if (leading_zero or a != 0) and (leading_zero := True)]
+        new_decs.reverse()
+        if not new_decs:
+            self.set_decs([0])
+        else:
+            self.set_decs(new_decs)
+        return self
+
+    def __eq__(self, other):
+        if self.get_decs() == other.get_decs() and \
+                self.get_units() == other.get_units() and \
+                self.get_sign() == other.get_sign():
+            return True
+        else:
+            return False
+
+    def __gt__(self, other):
+        if self.get_sign() == "+ve" and other.get_sign() == "-ve":
+            return True
+        elif self.get_sign() == "-ve" and other.get_sign() == "-ve":
+            return False
+
+        # Then the signs must be the same, and we will always arrive here...
+
+        if len(self.get_units()) > len(other.get_units()):
+            pass
 
     def __add__(self, other):
         a = copy.copy(self)
@@ -145,3 +199,9 @@ class Glide:
         x.set_units(output_units)
 
         return x
+
+    def __sub__(self, other):
+        a = copy.copy(self)
+        b = copy.copy(other)
+
+        return a, b
