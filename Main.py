@@ -91,18 +91,6 @@ class Glide:
 
         return self
 
-    def absolute(self):
-        a = copy.copy(self)
-        return a.set_sign("+ve")
-
-    def flip_sign(self):
-        if self.get_sign() == "+ve":
-            return self.set_sign("-ve")
-        elif self.get_sign() == "-ve":
-            return self.set_sign("+ve")
-        else:
-            raise AttributeError(f"Glide didn't have a valid sign. ({self.get_sign})")
-
     def to_float(self):
         f = 0
         for e, i in enumerate(self.get_decs()):
@@ -137,6 +125,18 @@ class Glide:
         else:
             self.set_decs(new_decs)
         return self
+
+    def __abs__(self):
+        a = copy.copy(self)
+        return a.set_sign("+ve")
+
+    def __neg__(self):
+        if self.get_sign() == "+ve":
+            return self.set_sign("-ve")
+        elif self.get_sign() == "-ve":
+            return self.set_sign("+ve")
+        else:
+            raise AttributeError(f"Glide didn't have a valid sign. ({self.get_sign})")
 
     def __eq__(self, other):
         if self.get_decs() == other.get_decs() and \
@@ -294,6 +294,16 @@ class Glide:
         a = copy.copy(self)
         b = copy.copy(other)
 
+        if a.get_sign() == "-ve" and b.get_sign() == "-ve":
+            c = abs(a) + abs(b)
+            return -c
+
+        elif a.get_sign() == "-ve" and b.get_sign() == "+ve":
+            return abs(b) - abs(a)
+
+        elif a.get_sign() == "+ve" and b.get_sign() == "-ve":
+            return abs(a) - abs(b)
+
         len_diff = len(a.get_decs()) - len(b.get_decs())
         zeros = [0] * abs(len_diff)
 
@@ -348,9 +358,22 @@ class Glide:
         a = copy.copy(self)
         b = copy.copy(other)
 
+        if a == b:
+            return Glide(0)
+
+        if a.get_sign() == "-ve" and b.get_sign() == "-ve":
+            return abs(b) - abs(a)
+
+        elif a.get_sign() == "+ve" and b.get_sign() == "-ve":
+            return abs(a) + abs(b)
+
+        elif a.get_sign() == "-ve" and b.get_sign() == "+ve":
+            c = abs(a) + abs(b)
+            return -c
+
         if a < b:
             c = b - a
-            return c.flip_sign()
+            return -c
 
         # actually do the subtraction. First need to do the subtraction over the decs...
 
