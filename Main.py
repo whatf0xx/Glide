@@ -270,6 +270,18 @@ class Glide:
         # print("Got to the end so returning False")
         return False
 
+    def __ge__(self, other):
+        if self > other or self == other:
+            return True
+        else:
+            return False
+
+    def __le__(self, other):
+        if self < other or self == other:
+            return True
+        else:
+            return False
+
     def __add__(self, other):
         a = copy.copy(self)
         b = copy.copy(other)
@@ -324,5 +336,7 @@ class Glide:
     def __sub__(self, other):
         a = copy.copy(self)
         b = copy.copy(other)
+
+
 
         return a, b
