@@ -95,6 +95,14 @@ class Glide:
         a = copy.copy(self)
         return a.set_sign("+ve")
 
+    def flip_sign(self):
+        if self.get_sign() == "+ve":
+            return self.set_sign("-ve")
+        elif self.get_sign() == "-ve":
+            return self.set_sign("+ve")
+        else:
+            raise AttributeError(f"Glide didn't have a valid sign. ({self.get_sign})")
+
     def to_float(self):
         f = 0
         for e, i in enumerate(self.get_decs()):
@@ -325,6 +333,9 @@ class Glide:
             else:
                 carry = 0
 
+        if carry == 1:
+            output_units.append(1)
+
         output_units.reverse()
 
         x = Glide(1)
@@ -337,6 +348,57 @@ class Glide:
         a = copy.copy(self)
         b = copy.copy(other)
 
+        if a < b:
+            c = b - a
+            return c.flip_sign()
 
+        # actually do the subtraction. First need to do the subtraction over the decs...
 
-        return a, b
+        len_diff = len(a.get_decs()) - len(b.get_decs())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_decs(b.get_decs() + zeros)
+        elif len_diff < 0:
+            a.set_decs(a.get_decs() + zeros)
+
+        carry = 0
+        output_decs = []
+
+        for ai, bi in zip(reversed(a.get_decs()), reversed(b.get_decs())):
+            s = ai - bi - carry
+            output_decs.append(s % 10)
+            if s < 0:
+                carry = 1
+            else:
+                carry = 0
+
+        output_decs.reverse()
+
+        len_diff = len(a.get_units()) - len(b.get_units())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_units(zeros + b.get_units())
+        elif len_diff < 0:
+            a.set_units(zeros + a.get_units())
+
+        output_units = []
+
+        for ci, di in zip(reversed(a.get_units()), reversed(b.get_units())):
+            s = ci - di - carry
+            output_units.append(s % 10)
+            if s < 0:
+                carry = 1
+            else:
+                carry = 0
+
+        output_units.reverse()
+
+        x = Glide(1)
+        x.set_decs(output_decs)
+        x.set_units(output_units)
+        if carry == 1:
+            x.set_sign("-ve")
+
+        return x
