@@ -67,9 +67,7 @@ class Glide:
         return self._units
 
     def set_units(self, new_units):
-        self._units = []
-        for c in str(new_units):
-            self._units.append(c)
+        self._units = new_units
 
         return self
 
@@ -77,9 +75,7 @@ class Glide:
         return self._decs
 
     def set_decs(self, new_decs):
-        self._decs = []
-        for c in str(new_decs):
-            self._decs.append(c)
+        self._decs = new_decs
 
         return self
 
@@ -96,5 +92,56 @@ class Glide:
         return self
 
     def absolute(self):
-        other = copy.copy(self)
-        return other.set_sign("+ve")
+        a = copy.copy(self)
+        return a.set_sign("+ve")
+
+    def __add__(self, other):
+        a = copy.copy(self)
+        b = copy.copy(other)
+
+        len_diff = len(a.get_decs()) - len(b.get_decs())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_decs(b.get_decs() + zeros)
+        elif len_diff < 0:
+            a.set_decs(a.get_decs() + zeros)
+
+        carry = 0
+        output_decs = []
+
+        for ai, bi in zip(reversed(a.get_decs()), reversed(b.get_decs())):
+            s = ai + bi + carry
+            output_decs.append(s % 10)
+            if s > 9:
+                carry = 1
+            else:
+                carry = 0
+
+        output_decs.reverse()
+
+        len_diff = len(a.get_units()) - len(b.get_units())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_units(zeros + b.get_units())
+        elif len_diff < 0:
+            a.set_units(zeros + a.get_units())
+
+        output_units = []
+
+        for ci, di in zip(reversed(a.get_units()), reversed(b.get_units())):
+            s = ci + di + carry
+            output_units.append(s % 10)
+            if s > 9:
+                carry = 1
+            else:
+                carry = 0
+
+        output_units.reverse()
+
+        x = Glide(1)
+        x.set_decs(output_decs)
+        x.set_units(output_units)
+
+        return x
