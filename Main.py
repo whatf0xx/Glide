@@ -140,14 +140,135 @@ class Glide:
 
     def __gt__(self, other):
         if self.get_sign() == "+ve" and other.get_sign() == "-ve":
+            # print("Easy sign comparison (case 1)")
             return True
-        elif self.get_sign() == "-ve" and other.get_sign() == "-ve":
+        elif self.get_sign() == "-ve" and other.get_sign() == "+ve":
+            # print("Easy sign comparison (case 2)")
             return False
 
         # Then the signs must be the same, and we will always arrive here...
+        fancy_truth = {"+ve": True, "-ve": False}
 
-        if len(self.get_units()) > len(other.get_units()):
-            pass
+        a = copy.copy(self).trim()
+        b = copy.copy(other).trim()
+        #
+        # if len(a.get_units()) > len(b.get_units()):
+        #     return fancy_truth[self.get_sign()]  # returns True if +ve and False if -ve
+        # elif len(a.get_units()) < len(b.get_units()):
+        #     return not fancy_truth[self.get_sign()]
+
+        len_diff = len(a.get_units()) - len(b.get_units())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_units(zeros + b.get_units())
+        elif len_diff < 0:
+            a.set_units(zeros + a.get_units())
+
+        # print(f"List 1: {a.get_units()}")
+        # print(f"List 2: {b.get_units()}")
+
+        # Compare digit by digit:
+        for i, j in zip(a.get_units(), b.get_units()):
+            if i > j:
+                # print(f"{i} > {j} !")
+                return fancy_truth[self.get_sign()]
+            elif j > i:
+                # print(f"{i} actually < {j} !")
+                return not fancy_truth[self.get_sign()]
+            # print(f"{i} not > {j}")
+
+        # equal units! Try the decimals...
+
+        len_diff = len(a.get_decs()) - len(b.get_decs())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_decs(b.get_decs() + zeros)
+        elif len_diff < 0:
+            a.set_decs(a.get_decs() + zeros)
+
+        # print(f"List 1: {a.get_decs()}")
+        # print(f"List 2: {b.get_decs()}")
+
+        for k, l in zip(a.get_decs(), b.get_decs()):
+            if k > l:
+                # print(f"{k} > {l} !")
+                return fancy_truth[self.get_sign()]
+            elif l > k:
+                # print(f"{k} actually < {l} !")
+                return not fancy_truth[self.get_sign()]
+            # print(f"{k} not > {l}")
+
+        # if we got here they must be equal.
+        # print("Got to the end so returning False")
+        return False
+
+    def __lt__(self, other):
+        if self.get_sign() == "+ve" and other.get_sign() == "-ve":
+            # print("Easy sign comparison (case 1)")
+            return False
+        elif self.get_sign() == "-ve" and other.get_sign() == "+ve":
+            # print("Easy sign comparison (case 2)")
+            return True
+
+        # Then the signs must be the same, and we will always arrive here...
+        fancy_truth = {"+ve": False, "-ve": True}
+
+        a = copy.copy(self).trim()
+        b = copy.copy(other).trim()
+        #
+        # if len(a.get_units()) > len(b.get_units()):
+        #     return fancy_truth[self.get_sign()]  # returns True if +ve and False if -ve
+        # elif len(a.get_units()) < len(b.get_units()):
+        #     return not fancy_truth[self.get_sign()]
+
+        len_diff = len(a.get_units()) - len(b.get_units())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_units(zeros + b.get_units())
+        elif len_diff < 0:
+            a.set_units(zeros + a.get_units())
+
+        # print(f"List 1: {a.get_units()}")
+        # print(f"List 2: {b.get_units()}")
+
+        # Compare digit by digit:
+        for i, j in zip(a.get_units(), b.get_units()):
+            if i > j:
+                # print(f"{i} > {j} !")
+                return fancy_truth[self.get_sign()]
+            elif j > i:
+                # print(f"{i} actually < {j} !")
+                return not fancy_truth[self.get_sign()]
+            # print(f"{i} not > {j}")
+
+        # equal units! Try the decimals...
+
+        len_diff = len(a.get_decs()) - len(b.get_decs())
+        zeros = [0] * abs(len_diff)
+
+        if len_diff > 0:
+            b.set_decs(b.get_decs() + zeros)
+        elif len_diff < 0:
+            a.set_decs(a.get_decs() + zeros)
+
+        # print(f"List 1: {a.get_decs()}")
+        # print(f"List 2: {b.get_decs()}")
+
+        for k, l in zip(a.get_decs(), b.get_decs()):
+            if k > l:
+                # print(f"{k} > {l} !")
+                return fancy_truth[self.get_sign()]
+            elif l > k:
+                # print(f"{k} actually < {l} !")
+                return not fancy_truth[self.get_sign()]
+            # print(f"{k} not > {l}")
+
+        # if we got here they must be equal.
+        # print("Got to the end so returning False")
+        return False
 
     def __add__(self, other):
         a = copy.copy(self)
