@@ -113,7 +113,11 @@ class Glide:
         self: the updated Glide.
         """
         leading_zero = False
-        self.set_units([a for a in self.get_units() if (leading_zero or a != 0) and (leading_zero := True)])
+        new_units = [a for a in self.get_units() if (leading_zero or a != 0) and (leading_zero := True)]
+        if not new_units:
+            self.set_units([0])
+        else:
+            self.set_units(new_units)
 
         decs = copy.copy(self.get_decs())
         decs.reverse()
@@ -425,3 +429,80 @@ class Glide:
             x.set_sign("-ve")
 
         return x
+
+    def __mul__(self, other):
+        a = copy.copy(self).trim()
+        b = copy.copy(other).trim()
+
+        if len(a.get_decs()) + len(a.get_units()) < len(b.get_decs()) + len(b.get_units()):
+            return b * a
+
+        if a.get_decs() == [0]:  # no need to shift if we have an integer
+            a_list = a.get_units()
+            a_shift = 0
+        else:
+            a_list = a.get_units() + a.get_decs()
+            a_shift = len(a.get_decs())
+
+        if b.get_decs() == [0]:  # no need to shift if we have an integer
+            b_list = b.get_units()
+            b_shift = 0
+        else:
+            b_list = b.get_units() + b.get_decs()
+            b_shift = len(b.get_decs())
+
+        # print(f"{a_list} \t with shift {a_shift}")
+        # print(f"{b_list} \t with shift {b_shift}")
+        # print("--------------")
+
+        table = []
+
+        for e, bi in enumerate(reversed(b_list)):
+            carry = 0
+            table.append([])
+
+            if e != 0:
+                table[e] += ([0] * e)
+
+            for ai in reversed(a_list):
+                p = (ai * bi + carry)
+                table[e].append(p % 10)
+
+                if p > 9:
+                    # print(f"Calculating carry... (p = {p})")
+                    carry = p // 10
+                else:
+                    carry = 0
+
+            if carry != 0:
+                table[e].append(carry)
+
+            table[e].reverse()
+            # print(table[e])
+
+        # print("--------------")
+
+        # Now add the rows as Glides!
+        s = Glide(0)
+
+        for i in table:
+            q = Glide(1)
+            q.set_units(i)
+            s += q
+
+        shift = a_shift + b_shift
+
+        if shift == 0:
+            if a.get_sign() == b.get_sign():
+                return s
+            else:
+                return -s
+
+        t = Glide(1)
+        t.set_units(s.get_units()[:-shift])
+        t.set_decs(s.get_units()[-shift:])
+
+        if a.get_sign() == b.get_sign():
+            return t
+        else:
+            return -t
