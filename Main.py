@@ -506,3 +506,29 @@ class Glide:
             return t
         else:
             return -t
+
+    def __floordiv__(self, other):
+        a = copy.copy(self)
+        b = copy.copy(other)
+
+        if a == b:
+            return Glide(1)
+
+        if a.get_sign() == "-ve" and b.get_sign() == "-ve":
+            return -a // -b
+        elif a.get_sign() == "-ve" and b.get_sign() == "+ve":
+            return - (-a // b)
+        elif a.get_sign() == "+ve" and b.get_sign() == "-ve":
+            return - (a // -b)
+
+        if b > a:
+            return Glide(0)
+
+        else:
+            i = 0
+            ans = Glide(0)
+            while ans <= a:
+                i += 1
+                ans += b
+
+            return i-1
