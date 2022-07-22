@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import math
 
 
 class Glide:
@@ -129,6 +130,62 @@ class Glide:
         else:
             self.set_decs(new_decs)
         return self
+
+    def to_rational(self) -> tuple[int, int]:
+        """
+        Thanks to https://jonisalonen.com/2012/converting-decimal-numbers-to-ratios/ for the
+        inspiration for this code!
+
+        Returns
+        -------
+        num, den : The numerator and the denominator for the rational fraction best approximated
+                    by the Glide.
+        """
+
+        """
+                var h1=1; var h2=0;
+                var k1=0; var k2=1;
+                var b = x;
+                do {
+                    var a = Math.floor(b);
+                    var aux = h1; h1 = a*h1+h2; h2 = aux;
+                    aux = k1; k1 = a*k1+k2; k2 = aux;
+                    b = 1/(b-a);
+                } while (Math.abs(x-h1/k1) > x*tolerance);
+                """
+
+        if self.get_decs() == [0]:
+            f = 0
+            for u, j in enumerate(reversed(self.get_units())):
+                f += 10 ** u * j
+
+            s = {"+ve": 1, "-ve": -1}
+            f *= s[self.get_sign()]
+
+            return f, 1
+
+        tolerance = 10 ** -len(self.get_decs())
+        h1, h2 = 1, 0
+        k1, k2 = 0, 1
+        x = self.to_float()  # so currently we lose all the detail anyway...
+        b = copy.copy(x)
+
+        while True:
+            a = math.floor(b)
+
+            h1, h2 = a*h1 + h2, h1
+
+            k1, k2 = a*k1 + k2, k1
+
+            b = 1/(b-a)
+
+            print(b, a)
+            print(h1, k1)
+            print("------")
+            if abs(x - h1/k1) <= x * tolerance:
+                break
+
+        return h1, k1
 
     def __abs__(self):
         a = copy.copy(self)
