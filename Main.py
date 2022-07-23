@@ -591,7 +591,7 @@ class Glide:
             if remainder % divisor == 0:
                 remainder = 0
             else:
-                remainder = 10 * (dividend % divisor)
+                remainder = 10 * (remainder % divisor)
 
         if shift == 0:
             return Glide(1).set_units(quotient_list).trim()
