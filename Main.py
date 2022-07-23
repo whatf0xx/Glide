@@ -532,3 +532,53 @@ class Glide:
                 ans += b
 
             return i-1
+
+    def __truediv__(self, other):
+        if self == other:
+            return Glide(1)
+
+        a = copy.copy(self)
+        b = copy.copy(other)
+
+        if a.get_decs() == [0]:  # no need to shift if we have an integer
+            a_list = a.get_units()
+            a_shift = 0
+        else:
+            a_list = a.get_units() + a.get_decs()
+            a_shift = len(a.get_decs())
+
+        if b.get_decs() == [0]:  # no need to shift if we have an integer
+            b_list = b.get_units()
+            b_shift = 0
+        else:
+            b_list = b.get_units() + b.get_decs()
+            b_shift = len(b.get_decs())
+
+        divisor = Glide(1).set_units(b_list).to_float() * 10**b_shift
+
+        shift = a_shift - b_shift
+
+        quotient_list = []
+        remainder = 0
+
+        for i in a_list:
+
+            dividend = remainder + i
+            quotient_list.append(int(dividend // divisor))
+
+            if dividend % divisor == 0:
+                remainder = 0
+            else:
+                remainder = 10 * (dividend % divisor)
+
+        if remainder == 0:
+            if shift == 0:
+                return Glide(1).set_units(quotient_list).trim()
+
+            t = Glide(1)
+            t.set_units(quotient_list[:-shift])
+            t.set_decs(quotient_list[-shift:])
+
+            return t
+
+        return quotient_list
