@@ -494,18 +494,18 @@ class Glide:
 
         if shift == 0:
             if a.get_sign() == b.get_sign():
-                return s
+                return s.trim()
             else:
-                return -s
+                return -s.trim()
 
         t = Glide(1)
         t.set_units(s.get_units()[:-shift])
         t.set_decs(s.get_units()[-shift:])
 
         if a.get_sign() == b.get_sign():
-            return t
+            return t.trim()
         else:
-            return -t
+            return -t.trim()
 
     def __floordiv__(self, other):
         a = copy.copy(self)
@@ -554,7 +554,7 @@ class Glide:
             b_list = b.get_units() + b.get_decs()
             b_shift = len(b.get_decs())
 
-        divisor = Glide(1).set_units(b_list).to_float() * 10**b_shift
+        divisor = Glide(1).set_units(b_list).to_float()
 
         shift = a_shift - b_shift
 
