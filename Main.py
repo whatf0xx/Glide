@@ -581,4 +581,23 @@ class Glide:
 
             return t
 
-        return quotient_list
+        precision_limit = 20
+        while len(quotient_list) < precision_limit and remainder != 0:
+            a_list.append(remainder)
+            shift += 1
+
+            quotient_list.append(int(remainder // divisor))
+
+            if remainder % divisor == 0:
+                remainder = 0
+            else:
+                remainder = 10 * (dividend % divisor)
+
+        if shift == 0:
+            return Glide(1).set_units(quotient_list).trim()
+
+        t = Glide(1)
+        t.set_units(quotient_list[:-shift])
+        t.set_decs(quotient_list[-shift:])
+
+        return t.trim()
