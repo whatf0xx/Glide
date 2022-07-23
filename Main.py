@@ -581,7 +581,8 @@ class Glide:
 
             return t
 
-        precision_limit = 20
+        precision_limit = max([len(a_list), len(b_list)]) + 1
+
         while len(quotient_list) < precision_limit and remainder != 0:
             a_list.append(remainder)
             shift += 1
