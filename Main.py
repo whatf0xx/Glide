@@ -24,6 +24,7 @@ class Glide:
     def __init__(self, number: float):
         self._units = []
         self._decs = []
+        self._precision = None
         try:
             if number >= 0:
                 self._sign = "+ve"
@@ -90,6 +91,13 @@ class Glide:
         else:
             self._sign = new_sign
 
+        return self
+
+    def get_precision(self):
+        return self._precision
+
+    def set_precision(self, precision: int):
+        self._precision = precision
         return self
 
     def to_float(self):
@@ -582,8 +590,10 @@ class Glide:
 
             return t
 
-        # precision_limit = max([len(a_list), len(b_list)]) + 1
-        precision_limit = 1000
+        if self.get_precision() is None:
+            precision_limit = max([len(a_list), len(b_list)]) + 1
+        else:
+            precision_limit = self.get_precision()
 
         while len(quotient_list) < precision_limit and remainder != 0:
             a_list.append(remainder)
@@ -606,15 +616,49 @@ class Glide:
         return t.trim()
 
 
-def main() -> None:
-    e = Glide(0)
-    for i in range(19):
-        print(i)
-        f = factorial(i)
-        print(f)
-        e += Glide(1) / Glide(f)
+def glide_from_int(num: int) -> Glide:
+    num_list = [int(a) for a in str(num)]
 
-    print(e)
+    output = Glide(1)
+    output.set_units(num_list)
+
+    return output
+
+
+def glide_to_string(g: Glide, raw: bool = True) -> str:
+    """
+    Take a Glide input and return a string representation.
+    Parameters
+    ----------
+    g : The input Glide
+    raw : bool, whether we want the glide as a proper string, or just the numbers associated. So if True only
+          the associated numbers of the glide, not -ve sign, decimal point etc.
+
+    Returns the string of numbers and symbols associated with the Glide's value.
+    -------
+
+    """
+    if raw:
+        return "".join([str(a) for a in g.get_units() + g.get_decs()])
+    else:
+        if g.get_sign() == "-ve":
+            return "-".join([str(a) for a in g.get_units()]) + ".".join([str(a) for a in g.get_decs()])
+
+
+def main() -> None:
+    precision = 10000
+    e = Glide(0)
+
+    for i in range(100):
+        f = glide_from_int(factorial(i))
+        f.set_precision(precision)
+        e += Glide(1).set_precision(precision) / f
+
+    accurate_e = glide_to_string(e)
+
+    for i in range(1):
+        n_to_check = accurate_e[i:i+10]
+        if
 
 
 if __name__ == "__main__":
