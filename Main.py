@@ -2,7 +2,6 @@
 import copy
 from math import factorial
 
-
 class Glide:
     """
     Arithmetic on arbitrarily accurate denary floats. These are implemented as 
@@ -658,7 +657,7 @@ def main() -> None:
 
     for i in range(1):
         n_to_check = accurate_e[i:i+10]
-        if
+        print(n_to_check)
 
 
 if __name__ == "__main__":
