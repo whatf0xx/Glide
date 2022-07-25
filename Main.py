@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+from math import factorial
 
 
 class Glide:
@@ -581,7 +582,8 @@ class Glide:
 
             return t
 
-        precision_limit = max([len(a_list), len(b_list)]) + 1
+        # precision_limit = max([len(a_list), len(b_list)]) + 1
+        precision_limit = 1000
 
         while len(quotient_list) < precision_limit and remainder != 0:
             a_list.append(remainder)
@@ -602,3 +604,18 @@ class Glide:
         t.set_decs(quotient_list[-shift:])
 
         return t.trim()
+
+
+def main() -> None:
+    e = Glide(0)
+    for i in range(19):
+        print(i)
+        f = factorial(i)
+        print(f)
+        e += Glide(1) / Glide(f)
+
+    print(e)
+
+
+if __name__ == "__main__":
+    main()
