@@ -545,25 +545,11 @@ class Glide:
         return x
 
     def __mul__(self, other):
-        a = copy.copy(self).trim()
-        b = copy.copy(other).trim()
+        a = copy.copy(self).trim().update_scientific()
+        b = copy.copy(other).trim().update_scientific()
 
-        if len(a.get_decs()) + len(a.get_units()) < len(b.get_decs()) + len(b.get_units()):
+        if len(a.get_mantissa()) < len(b.get_mantissa()):
             return b * a
-
-        if a.get_decs() == [0]:  # no need to shift if we have an integer
-            a_list = a.get_units()
-            a_shift = 0
-        else:
-            a_list = a.get_units() + a.get_decs()
-            a_shift = len(a.get_decs())
-
-        if b.get_decs() == [0]:  # no need to shift if we have an integer
-            b_list = b.get_units()
-            b_shift = 0
-        else:
-            b_list = b.get_units() + b.get_decs()
-            b_shift = len(b.get_decs())
 
         # print(f"{a_list} \t with shift {a_shift}")
         # print(f"{b_list} \t with shift {b_shift}")
@@ -571,14 +557,14 @@ class Glide:
 
         table = []
 
-        for e, bi in enumerate(reversed(b_list)):
+        for e, bi in enumerate(reversed(b.get_mantissa())):
             carry = 0
             table.append([])
 
             if e != 0:
                 table[e] += ([0] * e)
 
-            for ai in reversed(a_list):
+            for ai in reversed(a.get_mantissa()):
                 p = (ai * bi + carry)
                 table[e].append(p % 10)
 
@@ -588,8 +574,11 @@ class Glide:
                 else:
                     carry = 0
 
+            shift = a.get_pow() + b.get_pow()  # work out the power of the result
+
             if carry != 0:
                 table[e].append(carry)
+                shift += 1
 
             table[e].reverse()
             # print(table[e])
@@ -604,22 +593,14 @@ class Glide:
             q.set_units(i)
             s += q
 
-        shift = a_shift + b_shift
+        s.update_scientific()
+        s.set_pow(shift)
 
-        if shift == 0:
-            if a.get_sign() == b.get_sign():
-                return s.trim()
-            else:
-                return -s.trim()
-
-        t = Glide(1)
-        t.set_units(s.get_units()[:-shift])
-        t.set_decs(s.get_units()[-shift:])
 
         if a.get_sign() == b.get_sign():
-            return t.trim()
+            return s.update_decimal().trim()
         else:
-            return -t.trim()
+            return -s.update_decimal().trim()
 
     def __divmod__(self, other):
         a = copy.copy(self)
