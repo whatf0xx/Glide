@@ -545,6 +545,9 @@ class Glide:
     def __floordiv__(self, other):
         return divmod(self, other)[0]
 
+    def __mod__(self, other):
+        return divmod(self, other)[1]
+
     def __truediv__(self, other):
         if self == other:
             return Glide(1)
