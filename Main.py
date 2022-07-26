@@ -516,31 +516,34 @@ class Glide:
         else:
             return -t.trim()
 
-    def __floordiv__(self, other):
+    def __divmod__(self, other):
         a = copy.copy(self)
         b = copy.copy(other)
 
+        if b == Glide(0):
+            raise ZeroDivisionError("can't divide by Glide(0.0).")
+
         if a == b:
-            return Glide(1)
+            return Glide(1), Glide(0)
 
-        if a.get_sign() == "-ve" and b.get_sign() == "-ve":
-            return -a // -b
-        elif a.get_sign() == "-ve" and b.get_sign() == "+ve":
-            return - (-a // b)
-        elif a.get_sign() == "+ve" and b.get_sign() == "-ve":
-            return - (a // -b)
 
-        if b > a:
-            return Glide(0)
+        quot = Glide(0)
+        cum = Glide(0)
+        while abs(cum) <= abs(a):
+            if a.get_sign() == b.get_sign():
+                quot += Glide(1)
+                cum += b
+            else:
+                quot -= Glide(1)
+                cum -= b
 
-        else:
-            i = 0
-            ans = Glide(0)
-            while ans <= a:
-                i += 1
-                ans += b
+        if a.get_sign() == b.get_sign():
+            return (quot-Glide(1)).trim(), (a+b-cum).trim()
 
-            return i-1
+        return quot.trim(), (a-cum).trim()
+
+    def __floordiv__(self, other):
+        return divmod(self, other)[0]
 
     def __truediv__(self, other):
         if self == other:
@@ -664,4 +667,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    pass
+    #  main()
