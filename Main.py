@@ -3,6 +3,34 @@ import copy
 from math import factorial
 from sympy import isprime
 
+
+def remove_leading_zeros(s: list[int]) -> list[int]:
+    if not s:
+        return s
+
+    if s == [0]:
+        return s
+
+    leading_zero = False
+    new_s = [a for a in s if (leading_zero or a != 0) and (leading_zero := True)]
+
+    return new_s
+
+def remove_trailing_zeros(s: list[int]) -> list[int]:
+    if not s:
+        return s
+
+    if s == [0]:
+        return s
+    
+    decs = copy.copy(s)
+    decs.reverse()
+    leading_zero = False
+    new_decs = [a for a in decs if (leading_zero or a != 0) and (leading_zero := True)]
+    new_decs.reverse()
+    return new_decs
+
+
 class Glide:
     """
     Arithmetic on arbitrarily accurate denary floats. These are implemented as 
@@ -93,6 +121,17 @@ class Glide:
 
         return self
 
+    def update_scientific(self):
+        """
+        Based on the currently stored decimal represenation, update the scientific representation.
+        """
+        self.trim()
+
+        if self.get_decs() == [0]:  # case that the number is an integer
+            self.set_pow(len(self.get_units))
+
+            self.set_mantissa([])
+
     def get_sign(self):
         return self._sign
 
@@ -153,28 +192,21 @@ class Glide:
 
     def trim(self):
         """
-        Get rid of leading/trailing zeros.
+        Get rid of leading/trailing zeros on the decimal represenation of the Glide.
 
         Returns
         -------
         self: the updated Glide.
         """
-        leading_zero = False
-        new_units = [a for a in self.get_units() if (leading_zero or a != 0) and (leading_zero := True)]
-        if not new_units:
+        if not self.get_units():
             self.set_units([0])
         else:
-            self.set_units(new_units)
+            self.set_units(remove_leading_zeros(self.get_units()))
 
-        decs = copy.copy(self.get_decs())
-        decs.reverse()
-        leading_zero = False
-        new_decs = [a for a in decs if (leading_zero or a != 0) and (leading_zero := True)]
-        new_decs.reverse()
-        if not new_decs:
+        if not self.get_decs():
             self.set_decs([0])
         else:
-            self.set_decs(new_decs)
+            self.set_decs(remove_trailing_zeros(self.get_decs()))
         return self
 
     def __abs__(self):
