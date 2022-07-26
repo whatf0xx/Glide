@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 from math import factorial
+from sympy import isprime
 
 class Glide:
     """
@@ -648,16 +649,18 @@ def main() -> None:
     precision = 10000
     e = Glide(0)
 
-    for i in range(100):
+    for i in range(500):
         f = glide_from_int(factorial(i))
         f.set_precision(precision)
         e += Glide(1).set_precision(precision) / f
 
     accurate_e = glide_to_string(e)
 
-    for i in range(1):
+    for i in range(precision-9):
         n_to_check = accurate_e[i:i+10]
-        print(n_to_check)
+        if isprime(n_to_check):
+            print(f"{n_to_check} is the first prime we're interested in!")
+            break
 
 
 if __name__ == "__main__":
