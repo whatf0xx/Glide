@@ -526,19 +526,20 @@ class Glide:
         if a == b:
             return Glide(1), Glide(0)
 
-
         quot = Glide(0)
         cum = Glide(0)
-        while abs(cum) <= abs(a):
-            if a.get_sign() == b.get_sign():
-                quot += Glide(1)
-                cum += b
-            else:
-                quot -= Glide(1)
-                cum -= b
 
         if a.get_sign() == b.get_sign():
+
+            while abs(cum) <= abs(a):
+                    quot += Glide(1)
+                    cum += b
+
             return (quot-Glide(1)).trim(), (a+b-cum).trim()
+
+        while abs(cum) < abs(a):
+            quot -= Glide(1)
+            cum -= b
 
         return quot.trim(), (a-cum).trim()
 
@@ -555,57 +556,27 @@ class Glide:
         a = copy.copy(self)
         b = copy.copy(other)
 
-        if a.get_decs() == [0]:  # no need to shift if we have an integer
-            a_list = a.get_units()
-            a_shift = 0
-        else:
-            a_list = a.get_units() + a.get_decs()
-            a_shift = len(a.get_decs())
+        quot, rem = divmod(a, b)
+        if rem == Glide(0):
+            return quot  # if we're lucky we're done here!
 
-        if b.get_decs() == [0]:  # no need to shift if we have an integer
-            b_list = b.get_units()
-            b_shift = 0
-        else:
-            b_list = b.get_units() + b.get_decs()
-            b_shift = len(b.get_decs())
-
-        divisor = Glide(1).set_units(b_list).to_float()
-
-        shift = a_shift - b_shift
-
-        quotient_list = []
-        remainder = 0
-
-        for i in a_list:
-
-            dividend = remainder + i
-            quotient_list.append(int(dividend // divisor))
-
-            if dividend % divisor == 0:
-                remainder = 0
-            else:
-                remainder = 10 * (dividend % divisor)
-
-        if remainder == 0:
-            if shift == 0:
-                return Glide(1).set_units(quotient_list).trim()
-
-            t = Glide(1)
-            t.set_units(quotient_list[:-shift])
-            t.set_decs(quotient_list[-shift:])
-
-            return t
+        """
+        Otherwise we have to divide the remainder, until the precision limit is reached or the 
+        division terminates.
+        """
 
         if self.get_precision() is None:
-            precision_limit = max([len(a_list), len(b_list)]) + 1
+            a_len = len(a.get_units()) + len(a.get_decs())
+            b_len = len(b.get_units()) + len(b.get_decs())
+            precision_limit = max([a_len, b_len]) + 1
         else:
             precision_limit = self.get_precision()
 
-        while len(quotient_list) < precision_limit and remainder != 0:
-            a_list.append(remainder)
-            shift += 1
+        while len(quot.get_units()) + len(quot.get_decs()) < precision_limit and remainder != Glide(0):
 
-            quotient_list.append(int(remainder // divisor))
+            while remainder < b:
+                remainder *= Glide(10)
+
 
             if remainder % divisor == 0:
                 remainder = 0
