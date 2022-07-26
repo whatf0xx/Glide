@@ -149,6 +149,23 @@ class Glide:
 
         return self
 
+    def update_decimal(self):
+        """
+        Update the decimal representation of the Glide based on the currently stored
+        scientific representation.
+        """
+        if self.get_pow() == 0:
+            self.set_units([self.get_mantissa()[0]])
+            self.set_decs(self.get_mantissa()[1:])
+        elif self.get_pow() > 0:
+            self.set_units(self.get_mantissa()[:self.get_pow()+1])
+            self.set_decs(self.get_mantissa()[self.get_pow()+1:])
+        else:
+            self.set_units([0])
+            self.set_decs([0] * (self.get_pow() - 1) + self.get_mantissa())
+
+        return self.trim()
+
     def get_sign(self):
         return self._sign
 
@@ -224,6 +241,7 @@ class Glide:
             self.set_decs([0])
         else:
             self.set_decs(remove_trailing_zeros(self.get_decs()))
+
         return self
 
     def __abs__(self):
