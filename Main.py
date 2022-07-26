@@ -162,7 +162,7 @@ class Glide:
             self.set_decs(self.get_mantissa()[self.get_pow()+1:])
         else:
             self.set_units([0])
-            self.set_decs([0] * (self.get_pow() - 1) + self.get_mantissa())
+            self.set_decs([0] * (abs(self.get_pow()) - 1) + self.get_mantissa())
 
         return self.trim()
 
@@ -593,9 +593,8 @@ class Glide:
             q.set_units(i)
             s += q
 
-        s.update_scientific()
+        s.set_mantissa(s.get_units())
         s.set_pow(shift)
-
 
         if a.get_sign() == b.get_sign():
             return s.update_decimal()
