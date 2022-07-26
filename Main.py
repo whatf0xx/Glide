@@ -598,9 +598,9 @@ class Glide:
 
 
         if a.get_sign() == b.get_sign():
-            return s.update_decimal().trim()
+            return s.update_decimal()
         else:
-            return -s.update_decimal().trim()
+            return -s.update_decimal()
 
     def __divmod__(self, other):
         a = copy.copy(self)
