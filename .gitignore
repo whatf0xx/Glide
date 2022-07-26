@@ -1,8 +1,6 @@
-# Ignore everything
-*
-
-# But not these files...
-!.gitignore
-!Main.py
-!README.md
-# etc...
+.idea/
+Include/
+Lib/
+Scripts/
+share/
+pyvenv.cfg
