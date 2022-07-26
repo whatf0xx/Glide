@@ -22,29 +22,26 @@ class Glide:
     """
 
     def __init__(self, number: float):
+
+        """
+        Decimal representation attributes
+        """
         self._units = []
         self._decs = []
+
+        """
+        Scientific represenation attributes
+        """
+        self._mantissa = []
+        self._pow = 0
+
+        """
+        Attributes for properties of the Glide
+        """
         self._precision = None
-        try:
-            if number >= 0:
-                self._sign = "+ve"
-            else:
-                self._sign = "-ve"
+        self._sign = "+ve"
 
-            skip_on_negative = {"+ve": 0, "-ve": 1}
-
-            num_str = str(float(number))
-            dot = num_str.index(".")
-
-            for c in num_str[skip_on_negative[self._sign]:dot]:
-                self._units.append(int(c))
-
-            for d in num_str[dot + 1:]:
-                self._decs.append(int(d))
-
-        except TypeError:
-            print("Can't make sense of the input")
-            raise
+        self.from_float(number)
 
     def __repr__(self):
         return f"Glide({self})"
@@ -81,6 +78,21 @@ class Glide:
 
         return self
 
+    def get_pow(self):
+        return self._pow
+
+    def set_pow(self, new_pow: int):
+        self._pow = new_pow
+        return self
+
+    def get_mantissa(self):
+        return self._mantissa
+
+    def set_mantissa(self, mant: list[int]):
+        self._mantissa = mant
+
+        return self
+
     def get_sign(self):
         return self._sign
 
@@ -112,6 +124,32 @@ class Glide:
         f *= s[self.get_sign()]
 
         return f
+
+    def from_float(self, number: float):
+        try:
+            if number < 0:
+                self.set_sign("-ve")
+
+            skip_on_negative = {"+ve": 0, "-ve": 1}
+
+            num_str = str(float(number))
+            dot = num_str.index(".")
+
+            units = []
+            decs = []
+
+            for c in num_str[skip_on_negative[self._sign]:dot]:
+                units.append(int(c))
+
+            for d in num_str[dot + 1:]:
+                decs.append(int(d))
+
+            self.set_units(units)
+            self.set_decs(decs)
+
+        except TypeError:
+            print("Can't make sense of the input")
+            raise
 
     def trim(self):
         """
@@ -574,8 +612,12 @@ class Glide:
 
         while len(quot.get_units()) + len(quot.get_decs()) < precision_limit and remainder != Glide(0):
 
+            zeros = 0
             while remainder < b:
                 remainder *= Glide(10)
+                zeros += 1
+
+
 
 
             if remainder % divisor == 0:
