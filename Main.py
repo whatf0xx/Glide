@@ -22,7 +22,7 @@ def remove_trailing_zeros(s: list[int]) -> list[int]:
 
     if s == [0]:
         return s
-    
+
     decs = copy.copy(s)
     decs.reverse()
     leading_zero = False
@@ -127,10 +127,27 @@ class Glide:
         """
         self.trim()
 
-        if self.get_decs() == [0]:  # case that the number is an integer
-            self.set_pow(len(self.get_units))
+        if self == Glide(0):
+            self.set_pow(0)
+            self.set_mantissa(0)
+            return self
 
-            self.set_mantissa([])
+        if self.get_decs() == [0]:  # case that the number is an integer
+            self.set_pow(len(self.get_units()) - 1)
+
+            self.set_mantissa(remove_trailing_zeros(self.get_units()))
+
+        if self.get_units() == [0]: #  case that the number is between 0 and 1
+            trimmed_mant = remove_leading_zeros(self.get_decs())
+            leading_zeros = len(self.get_decs()) - len(trimmed_mant)
+            self.set_pow(- leading_zeros - 1)
+            self.set_mantissa(trimmed_mant)
+
+        else:
+            self.set_pow(len(self.get_units()) - 1)
+            self.set_mantissa(self.get_units() + self.get_decs())
+
+        return self
 
     def get_sign(self):
         return self._sign
