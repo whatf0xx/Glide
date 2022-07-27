@@ -224,6 +224,48 @@ class Glide:
             print("Can't make sense of the input")
             raise
 
+    def get_length(self):
+        return len(self.get_units()) + len(self.get_decs())
+
+    def left_shift(self, shift: int):
+        if shift == 0:
+            return self
+        elif shift < 0:
+            return self.right_shift(abs(shift))
+
+        if self.get_decs() == [0]: #  then no need to worry about things right of the decimal point
+            self.set_units(self.get_units() + [0] * shift)
+            return self.trim()
+
+        if shift <= len(self.get_decs()):
+            self.set_units(self.get_units() + self.get_decs()[:shift])
+            self.set_decs(self.get_decs()[shift:])
+            return self.trim()
+
+        self.set_units(self.get_units() + self.get_decs() + [0] * (shift - len(self.get_decs())))
+        self.set_decs([0])
+        return self.trim()
+
+    def right_shift(self, shift: int):
+
+        if shift == 0:
+            return self
+        elif shift < 0:
+            return self.left_shift(abs(shift))
+
+        if self.get_units() == [0]:
+            self.set_decs([0] * shift + self.get_decs())
+            return self.trim()
+
+        if shift <= len(self.get_units()):
+            self.set_decs(self.get_units()[-shift:] + self.get_decs())
+            self.set_units(self.get_units()[:-shift])
+            return self.trim()
+
+        self.set_decs([0] * (shift - len(self.get_decs()) - 1) + self.get_units() + self.get_decs())
+        self.set_units([0])
+        return self.trim()
+
     def trim(self):
         """
         Get rid of leading/trailing zeros on the decimal represenation of the Glide.
@@ -651,35 +693,27 @@ class Glide:
         """
 
         if self.get_precision() is None:
-            a_len = len(a.get_units()) + len(a.get_decs())
-            b_len = len(b.get_units()) + len(b.get_decs())
+            a_len = len(a.get_mantissa())
+            b_len = len(b.get_mantissa())
             precision_limit = max([a_len, b_len]) + 1
         else:
             precision_limit = self.get_precision()
 
-        while len(quot.get_units()) + len(quot.get_decs()) < precision_limit and remainder != Glide(0):
+        shift = 0
+        while quot.get_length() < precision_limit and rem != Glide(0):
 
-            zeros = 0
-            while remainder < b:
-                remainder *= Glide(10)
-                zeros += 1
+            while rem < b:
+                shift += 1
+                rem.left_shift(1)
 
+            quot += (rem // b).right_shift(shift+1)
 
-
-
-            if remainder % divisor == 0:
-                remainder = 0
+            if rem % b == Glide(0):
+                rem = Glide(0)
             else:
-                remainder = 10 * (remainder % divisor)
+                rem = (rem % b)
 
-        if shift == 0:
-            return Glide(1).set_units(quotient_list).trim()
-
-        t = Glide(1)
-        t.set_units(quotient_list[:-shift])
-        t.set_decs(quotient_list[-shift:])
-
-        return t.trim()
+        return quot
 
 
 def glide_from_int(num: int) -> Glide:
@@ -689,7 +723,6 @@ def glide_from_int(num: int) -> Glide:
     output.set_units(num_list)
 
     return output
-
 
 def glide_to_string(g: Glide, raw: bool = True) -> str:
     """
@@ -712,23 +745,41 @@ def glide_to_string(g: Glide, raw: bool = True) -> str:
 
 
 def main() -> None:
-    precision = 10000
-    e = Glide(0)
+    get_value = False
+    if get_value == True:
+        precision = 2500
+        e = Glide(0)
 
-    for i in range(500):
-        f = glide_from_int(factorial(i))
-        f.set_precision(precision)
-        e += Glide(1).set_precision(precision) / f
+        for i in range(1000):
+            f = glide_from_int(factorial(i))
+            f.set_precision(precision)
+            e += Glide(1).set_precision(precision) / f
+            if i % 50 == 0:
+                print("-" * 10)
+                print(f"i: {i}...")
 
-    accurate_e = glide_to_string(e)
+        accurate_e = glide_to_string(e)
+        with open("accurate_e.txt", "w") as f:
+            f.write(accurate_e)
 
-    for i in range(precision-9):
+    else:
+        with open("accurate_e.txt", "r") as f:
+            accurate_e = f.read()
+            precision = len(accurate_e)
+            print("Successfully imported the value of e")
+            print("-" * 20)
+
+    for i in range(precision-1000):
         n_to_check = accurate_e[i:i+10]
-        if isprime(n_to_check):
+        if i % 33 == 0:
+            print(f"Checking the number starting on the {i}th digit: {n_to_check}")
+        if isprime(int(n_to_check)):
             print(f"{n_to_check} is the first prime we're interested in!")
             break
+        if i % 33 == 0:
+            print("Not a prime.")
+            print("-" * 20)
 
 
 if __name__ == "__main__":
-    pass
-    #  main()
+    main()
