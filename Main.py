@@ -3,6 +3,34 @@ import copy
 from math import factorial
 from sympy import isprime
 
+
+def remove_leading_zeros(s: list[int]) -> list[int]:
+    if not s:
+        return s
+
+    if s == [0]:
+        return s
+
+    leading_zero = False
+    new_s = [a for a in s if (leading_zero or a != 0) and (leading_zero := True)]
+
+    return new_s
+
+def remove_trailing_zeros(s: list[int]) -> list[int]:
+    if not s:
+        return s
+
+    if s == [0]:
+        return s
+
+    decs = copy.copy(s)
+    decs.reverse()
+    leading_zero = False
+    new_decs = [a for a in decs if (leading_zero or a != 0) and (leading_zero := True)]
+    new_decs.reverse()
+    return new_decs
+
+
 class Glide:
     """
     Arithmetic on arbitrarily accurate denary floats. These are implemented as 
@@ -22,29 +50,26 @@ class Glide:
     """
 
     def __init__(self, number: float):
+
+        """
+        Decimal representation attributes
+        """
         self._units = []
         self._decs = []
+
+        """
+        Scientific represenation attributes
+        """
+        self._mantissa = []
+        self._pow = 0
+
+        """
+        Attributes for properties of the Glide
+        """
         self._precision = None
-        try:
-            if number >= 0:
-                self._sign = "+ve"
-            else:
-                self._sign = "-ve"
+        self._sign = "+ve"
 
-            skip_on_negative = {"+ve": 0, "-ve": 1}
-
-            num_str = str(float(number))
-            dot = num_str.index(".")
-
-            for c in num_str[skip_on_negative[self._sign]:dot]:
-                self._units.append(int(c))
-
-            for d in num_str[dot + 1:]:
-                self._decs.append(int(d))
-
-        except TypeError:
-            print("Can't make sense of the input")
-            raise
+        self.from_float(number)
 
     def __repr__(self):
         return f"Glide({self})"
@@ -81,6 +106,66 @@ class Glide:
 
         return self
 
+    def get_pow(self):
+        return self._pow
+
+    def set_pow(self, new_pow: int):
+        self._pow = new_pow
+        return self
+
+    def get_mantissa(self):
+        return self._mantissa
+
+    def set_mantissa(self, mant: list[int]):
+        self._mantissa = mant
+
+        return self
+
+    def update_scientific(self):
+        """
+        Based on the currently stored decimal represenation, update the scientific representation.
+        """
+        self.trim()
+
+        if self == Glide(0):
+            self.set_pow(0)
+            self.set_mantissa(0)
+            return self
+
+        if self.get_decs() == [0]:  # case that the number is an integer
+            self.set_pow(len(self.get_units()) - 1)
+
+            self.set_mantissa(remove_trailing_zeros(self.get_units()))
+
+        if self.get_units() == [0]: #  case that the number is between 0 and 1
+            trimmed_mant = remove_leading_zeros(self.get_decs())
+            leading_zeros = len(self.get_decs()) - len(trimmed_mant)
+            self.set_pow(- leading_zeros - 1)
+            self.set_mantissa(trimmed_mant)
+
+        else:
+            self.set_pow(len(self.get_units()) - 1)
+            self.set_mantissa(self.get_units() + self.get_decs())
+
+        return self
+
+    def update_decimal(self):
+        """
+        Update the decimal representation of the Glide based on the currently stored
+        scientific representation.
+        """
+        if self.get_pow() == 0:
+            self.set_units([self.get_mantissa()[0]])
+            self.set_decs(self.get_mantissa()[1:])
+        elif self.get_pow() > 0:
+            self.set_units(self.get_mantissa()[:self.get_pow()+1])
+            self.set_decs(self.get_mantissa()[self.get_pow()+1:])
+        else:
+            self.set_units([0])
+            self.set_decs([0] * (abs(self.get_pow()) - 1) + self.get_mantissa())
+
+        return self.trim()
+
     def get_sign(self):
         return self._sign
 
@@ -113,30 +198,92 @@ class Glide:
 
         return f
 
+    def from_float(self, number: float):
+        try:
+            if number < 0:
+                self.set_sign("-ve")
+
+            skip_on_negative = {"+ve": 0, "-ve": 1}
+
+            num_str = str(float(number))
+            dot = num_str.index(".")
+
+            units = []
+            decs = []
+
+            for c in num_str[skip_on_negative[self._sign]:dot]:
+                units.append(int(c))
+
+            for d in num_str[dot + 1:]:
+                decs.append(int(d))
+
+            self.set_units(units)
+            self.set_decs(decs)
+
+        except TypeError:
+            print("Can't make sense of the input")
+            raise
+
+    def get_length(self):
+        return len(self.get_units()) + len(self.get_decs())
+
+    def left_shift(self, shift: int):
+        if shift == 0:
+            return self
+        elif shift < 0:
+            return self.right_shift(abs(shift))
+
+        if self.get_decs() == [0]: #  then no need to worry about things right of the decimal point
+            self.set_units(self.get_units() + [0] * shift)
+            return self.trim()
+
+        if shift <= len(self.get_decs()):
+            self.set_units(self.get_units() + self.get_decs()[:shift])
+            self.set_decs(self.get_decs()[shift:])
+            return self.trim()
+
+        self.set_units(self.get_units() + self.get_decs() + [0] * (shift - len(self.get_decs())))
+        self.set_decs([0])
+        return self.trim()
+
+    def right_shift(self, shift: int):
+
+        if shift == 0:
+            return self
+        elif shift < 0:
+            return self.left_shift(abs(shift))
+
+        if self.get_units() == [0]:
+            self.set_decs([0] * shift + self.get_decs())
+            return self.trim()
+
+        if shift <= len(self.get_units()):
+            self.set_decs(self.get_units()[-shift:] + self.get_decs())
+            self.set_units(self.get_units()[:-shift])
+            return self.trim()
+
+        self.set_decs([0] * (shift - len(self.get_decs()) - 1) + self.get_units() + self.get_decs())
+        self.set_units([0])
+        return self.trim()
+
     def trim(self):
         """
-        Get rid of leading/trailing zeros.
+        Get rid of leading/trailing zeros on the decimal represenation of the Glide.
 
         Returns
         -------
         self: the updated Glide.
         """
-        leading_zero = False
-        new_units = [a for a in self.get_units() if (leading_zero or a != 0) and (leading_zero := True)]
-        if not new_units:
+        if not self.get_units():
             self.set_units([0])
         else:
-            self.set_units(new_units)
+            self.set_units(remove_leading_zeros(self.get_units()))
 
-        decs = copy.copy(self.get_decs())
-        decs.reverse()
-        leading_zero = False
-        new_decs = [a for a in decs if (leading_zero or a != 0) and (leading_zero := True)]
-        new_decs.reverse()
-        if not new_decs:
+        if not self.get_decs():
             self.set_decs([0])
         else:
-            self.set_decs(new_decs)
+            self.set_decs(remove_trailing_zeros(self.get_decs()))
+
         return self
 
     def __abs__(self):
@@ -440,25 +587,11 @@ class Glide:
         return x
 
     def __mul__(self, other):
-        a = copy.copy(self).trim()
-        b = copy.copy(other).trim()
+        a = copy.copy(self).trim().update_scientific()
+        b = copy.copy(other).trim().update_scientific()
 
-        if len(a.get_decs()) + len(a.get_units()) < len(b.get_decs()) + len(b.get_units()):
+        if len(a.get_mantissa()) < len(b.get_mantissa()):
             return b * a
-
-        if a.get_decs() == [0]:  # no need to shift if we have an integer
-            a_list = a.get_units()
-            a_shift = 0
-        else:
-            a_list = a.get_units() + a.get_decs()
-            a_shift = len(a.get_decs())
-
-        if b.get_decs() == [0]:  # no need to shift if we have an integer
-            b_list = b.get_units()
-            b_shift = 0
-        else:
-            b_list = b.get_units() + b.get_decs()
-            b_shift = len(b.get_decs())
 
         # print(f"{a_list} \t with shift {a_shift}")
         # print(f"{b_list} \t with shift {b_shift}")
@@ -466,14 +599,14 @@ class Glide:
 
         table = []
 
-        for e, bi in enumerate(reversed(b_list)):
+        for e, bi in enumerate(reversed(b.get_mantissa())):
             carry = 0
             table.append([])
 
             if e != 0:
                 table[e] += ([0] * e)
 
-            for ai in reversed(a_list):
+            for ai in reversed(a.get_mantissa()):
                 p = (ai * bi + carry)
                 table[e].append(p % 10)
 
@@ -483,8 +616,11 @@ class Glide:
                 else:
                     carry = 0
 
+            shift = a.get_pow() + b.get_pow()  # work out the power of the result
+
             if carry != 0:
                 table[e].append(carry)
+                shift += 1
 
             table[e].reverse()
             # print(table[e])
@@ -499,22 +635,13 @@ class Glide:
             q.set_units(i)
             s += q
 
-        shift = a_shift + b_shift
-
-        if shift == 0:
-            if a.get_sign() == b.get_sign():
-                return s.trim()
-            else:
-                return -s.trim()
-
-        t = Glide(1)
-        t.set_units(s.get_units()[:-shift])
-        t.set_decs(s.get_units()[-shift:])
+        s.set_mantissa(s.get_units())
+        s.set_pow(shift)
 
         if a.get_sign() == b.get_sign():
-            return t.trim()
+            return s.update_decimal()
         else:
-            return -t.trim()
+            return -s.update_decimal()
 
     def __divmod__(self, other):
         a = copy.copy(self)
@@ -526,19 +653,20 @@ class Glide:
         if a == b:
             return Glide(1), Glide(0)
 
-
         quot = Glide(0)
         cum = Glide(0)
-        while abs(cum) <= abs(a):
-            if a.get_sign() == b.get_sign():
-                quot += Glide(1)
-                cum += b
-            else:
-                quot -= Glide(1)
-                cum -= b
 
         if a.get_sign() == b.get_sign():
+
+            while abs(cum) <= abs(a):
+                    quot += Glide(1)
+                    cum += b
+
             return (quot-Glide(1)).trim(), (a+b-cum).trim()
+
+        while abs(cum) < abs(a):
+            quot -= Glide(1)
+            cum -= b
 
         return quot.trim(), (a-cum).trim()
 
@@ -555,71 +683,37 @@ class Glide:
         a = copy.copy(self)
         b = copy.copy(other)
 
-        if a.get_decs() == [0]:  # no need to shift if we have an integer
-            a_list = a.get_units()
-            a_shift = 0
-        else:
-            a_list = a.get_units() + a.get_decs()
-            a_shift = len(a.get_decs())
+        quot, rem = divmod(a, b)
+        if rem == Glide(0):
+            return quot  # if we're lucky we're done here!
 
-        if b.get_decs() == [0]:  # no need to shift if we have an integer
-            b_list = b.get_units()
-            b_shift = 0
-        else:
-            b_list = b.get_units() + b.get_decs()
-            b_shift = len(b.get_decs())
-
-        divisor = Glide(1).set_units(b_list).to_float()
-
-        shift = a_shift - b_shift
-
-        quotient_list = []
-        remainder = 0
-
-        for i in a_list:
-
-            dividend = remainder + i
-            quotient_list.append(int(dividend // divisor))
-
-            if dividend % divisor == 0:
-                remainder = 0
-            else:
-                remainder = 10 * (dividend % divisor)
-
-        if remainder == 0:
-            if shift == 0:
-                return Glide(1).set_units(quotient_list).trim()
-
-            t = Glide(1)
-            t.set_units(quotient_list[:-shift])
-            t.set_decs(quotient_list[-shift:])
-
-            return t
+        """
+        Otherwise we have to divide the remainder, until the precision limit is reached or the 
+        division terminates.
+        """
 
         if self.get_precision() is None:
-            precision_limit = max([len(a_list), len(b_list)]) + 1
+            a_len = len(a.get_mantissa())
+            b_len = len(b.get_mantissa())
+            precision_limit = max([a_len, b_len]) + 1
         else:
             precision_limit = self.get_precision()
 
-        while len(quotient_list) < precision_limit and remainder != 0:
-            a_list.append(remainder)
-            shift += 1
+        shift = 0
+        while quot.get_length() < precision_limit and rem != Glide(0):
 
-            quotient_list.append(int(remainder // divisor))
+            while rem < b:
+                shift += 1
+                rem.left_shift(1)
 
-            if remainder % divisor == 0:
-                remainder = 0
+            quot += (rem // b).right_shift(shift+1)
+
+            if rem % b == Glide(0):
+                rem = Glide(0)
             else:
-                remainder = 10 * (remainder % divisor)
+                rem = (rem % b)
 
-        if shift == 0:
-            return Glide(1).set_units(quotient_list).trim()
-
-        t = Glide(1)
-        t.set_units(quotient_list[:-shift])
-        t.set_decs(quotient_list[-shift:])
-
-        return t.trim()
+        return quot
 
 
 def glide_from_int(num: int) -> Glide:
@@ -629,7 +723,6 @@ def glide_from_int(num: int) -> Glide:
     output.set_units(num_list)
 
     return output
-
 
 def glide_to_string(g: Glide, raw: bool = True) -> str:
     """
@@ -652,23 +745,41 @@ def glide_to_string(g: Glide, raw: bool = True) -> str:
 
 
 def main() -> None:
-    precision = 10000
-    e = Glide(0)
+    get_value = False
+    if get_value == True:
+        precision = 2500
+        e = Glide(0)
 
-    for i in range(500):
-        f = glide_from_int(factorial(i))
-        f.set_precision(precision)
-        e += Glide(1).set_precision(precision) / f
+        for i in range(1000):
+            f = glide_from_int(factorial(i))
+            f.set_precision(precision)
+            e += Glide(1).set_precision(precision) / f
+            if i % 50 == 0:
+                print("-" * 10)
+                print(f"i: {i}...")
 
-    accurate_e = glide_to_string(e)
+        accurate_e = glide_to_string(e)
+        with open("accurate_e.txt", "w") as f:
+            f.write(accurate_e)
 
-    for i in range(precision-9):
+    else:
+        with open("accurate_e.txt", "r") as f:
+            accurate_e = f.read()
+            precision = len(accurate_e)
+            print("Successfully imported the value of e")
+            print("-" * 20)
+
+    for i in range(precision-1000):
         n_to_check = accurate_e[i:i+10]
-        if isprime(n_to_check):
+        if i % 33 == 0:
+            print(f"Checking the number starting on the {i}th digit: {n_to_check}")
+        if isprime(int(n_to_check)):
             print(f"{n_to_check} is the first prime we're interested in!")
             break
+        if i % 33 == 0:
+            print("Not a prime.")
+            print("-" * 20)
 
 
 if __name__ == "__main__":
-    pass
-    #  main()
+    main()
